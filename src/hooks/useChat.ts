@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import azureFoundryService from '../services/azureFoundry';
+import openaiAssistantService from '../services/openaiAssistant';
 import type { ChatMessage, ChatState, SearchResult } from '../types/chat';
 
 export const useChat = () => {
@@ -68,9 +68,9 @@ export const useChat = () => {
         isLoading: true
       });
 
-      if (!azureFoundryService.isConfigured()) {
+      if (!openaiAssistantService.isConfigured()) {
         updateMessage(assistantMessage.id, {
-          content: 'Azure OpenAI is not configured. Please check your environment variables.\n\nFor now, I can show you some example dataset recommendations based on your query.',
+          content: 'OpenAI is not configured. Please check your environment variables.\n\nFor now, I can show you some example dataset recommendations based on your query.',
           isLoading: false
         });
 
@@ -105,7 +105,7 @@ export const useChat = () => {
       }
 
       try {
-        const results = await azureFoundryService.searchDatasets({
+        const results = await openaiAssistantService.searchDatasets({
           query: content.trim(),
           maxResults: 5,
           threshold: 0.3
@@ -133,7 +133,7 @@ export const useChat = () => {
           { role: 'user', content: content.trim() }
         ];
 
-        const fallbackResponse = await azureFoundryService.getChatResponse(conversationHistory);
+        const fallbackResponse = await openaiAssistantService.getChatResponse(conversationHistory);
         
         updateMessage(assistantMessage.id, {
           content: fallbackResponse,

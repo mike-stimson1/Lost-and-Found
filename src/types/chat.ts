@@ -12,18 +12,21 @@ export interface ChatState {
   error: string | null;
 }
 
-export interface AzureFoundryResponse {
-  choices: {
-    message: {
-      role: string;
-      content: string;
+export interface OpenAIAssistantResponse {
+  id: string;
+  object: string;
+  created_at: number;
+  assistant_id: string;
+  thread_id: string;
+  run_id: string;
+  role: string;
+  content: {
+    type: string;
+    text: {
+      value: string;
+      annotations: unknown[];
     };
   }[];
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
 }
 
 export interface DatasetSearchQuery {
@@ -40,6 +43,7 @@ export interface SearchResult {
   metadata: {
     conceptSchemeId: string;
     dataflowIdentifier?: string;
+    dataKey?: string;
     lastUpdated?: string;
     tags?: string[];
   };

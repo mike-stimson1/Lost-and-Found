@@ -1,6 +1,6 @@
 # Australian Government Dataset Scanner
 
-An AI-powered chat tool that helps users discover and explore relevant Australian government datasets through natural language queries. Built with React, TypeScript, Material-UI, and Azure OpenAI.
+An AI-powered chat tool that helps users discover and explore relevant Australian government datasets through natural language queries. Built with React, TypeScript, Material-UI, and OpenAI Assistants API.
 
 ## Features
 
@@ -12,9 +12,9 @@ An AI-powered chat tool that helps users discover and explore relevant Australia
 
 ## Prerequisites
 
-1. **Azure OpenAI Account**: You need access to Azure OpenAI service
-2. **Vector Store Setup**: Upload the `conceptscheme.json` to Azure Foundry as a vector store document
-3. **API Configuration**: Get your Azure OpenAI endpoint, API key, and deployment name
+1. **OpenAI Account**: You need access to OpenAI API
+2. **Assistant Setup**: Create an OpenAI Assistant with the `conceptscheme.json` uploaded as knowledge
+3. **API Configuration**: Get your OpenAI API key and Assistant ID from the OpenAI platform
 
 ## Installation
 
@@ -33,11 +33,10 @@ npm install
 cp .env.example .env
 ```
 
-4. Edit `.env` file with your Azure OpenAI credentials:
+4. Edit `.env` file with your OpenAI credentials:
 ```env
-VITE_AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
-VITE_AZURE_OPENAI_API_KEY=your-api-key-here
-VITE_AZURE_OPENAI_DEPLOYMENT_NAME=your-deployment-name
+VITE_OPENAI_API_KEY=your-api-key-here
+VITE_OPENAI_ASSISTANT_ID=your-assistant-id
 ```
 
 ## Usage
@@ -57,7 +56,7 @@ npm run dev
 ## How It Works
 
 1. **User Query**: Type a natural language question about datasets
-2. **AI Processing**: Azure OpenAI analyzes your query against the vector store
+2. **AI Processing**: OpenAI Assistant analyzes your query against the knowledge base
 3. **Dataset Recommendations**: AI returns relevant datasets with relevance scores
 4. **Data Exploration**: Select datasets to view actual data from Australian Gov API
 5. **Interactive Results**: Browse structured data with filtering and pagination
@@ -65,7 +64,7 @@ npm run dev
 ## API Integration
 
 The app integrates with:
-- **Azure OpenAI**: For natural language processing and dataset recommendations
+- **OpenAI Assistants API**: For natural language processing and dataset recommendations
 - **Australian Bureau of Statistics API**: For fetching actual dataset data
   - Base URL: `https://data.api.abs.gov.au/rest/data/`
   - Supports various parameters: date ranges, detail levels, dimensions
@@ -80,7 +79,7 @@ src/
 │   ├── DatasetViewer.tsx      # Data table viewer
 │   └── SearchResults.tsx      # Search results grid
 ├── services/           # API services
-│   ├── azureFoundry.ts        # Azure OpenAI integration
+│   ├── openaiAssistant.ts     # OpenAI Assistants API integration
 │   └── australianGovApi.ts    # Australian Gov API client
 ├── types/              # TypeScript definitions
 │   ├── dataset.ts             # Dataset type definitions
@@ -104,9 +103,8 @@ src/
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `VITE_AZURE_OPENAI_ENDPOINT` | Your Azure OpenAI endpoint URL | Yes |
-| `VITE_AZURE_OPENAI_API_KEY` | Your Azure OpenAI API key | Yes |
-| `VITE_AZURE_OPENAI_DEPLOYMENT_NAME` | Your model deployment name | Yes |
+| `VITE_OPENAI_API_KEY` | Your OpenAI API key | Yes |
+| `VITE_OPENAI_ASSISTANT_ID` | Your OpenAI Assistant ID | Yes |
 | `VITE_ABS_API_TIMEOUT` | API timeout in milliseconds | No (default: 30000) |
 | `VITE_MAX_SEARCH_RESULTS` | Maximum search results to return | No (default: 5) |
 
@@ -120,10 +118,10 @@ The built files will be in the `dist/` directory.
 
 ## Troubleshooting
 
-### Azure OpenAI Issues
-- Verify your endpoint URL includes the full path
-- Check that your API key is correct and has proper permissions
-- Ensure your deployment name matches exactly
+### OpenAI Issues
+- Verify your API key is correct and has proper permissions
+- Ensure your Assistant ID matches exactly
+- Make sure your Assistant has the conceptscheme.json uploaded as knowledge
 
 ### Dataset API Issues
 - Some datasets may not be available or have restricted access
