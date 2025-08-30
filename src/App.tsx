@@ -20,6 +20,7 @@ import theme from './theme';
 import ChatInterface from './components/ChatInterface';
 import SearchResults from './components/SearchResults';
 import DatasetViewer from './components/DatasetViewer';
+import DatasetSidebar from './components/DatasetSidebar';
 import { useChat } from './hooks/useChat';
 import { useAbsData } from './hooks/useAbsData';
 
@@ -119,8 +120,18 @@ function App() {
             px: { xs: 2, sm: 3 }
           }}
         >
-          <Box sx={{ display: 'flex', gap: 3, height: 'calc(100vh - 120px)' }}>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            height: 'calc(100vh - 120px)',
+            flexDirection: { xs: 'column', md: 'row' }
+          }}>
+            {/* Chat Interface */}
+            <Box sx={{ 
+              flex: { xs: 1, md: 2 }, 
+              minWidth: 0,
+              height: { xs: '50%', md: '100%' }
+            }}>
               <Paper 
                 elevation={2}
                 sx={{ 
@@ -145,18 +156,40 @@ function App() {
                   onClearError={chat.clearError}
                 />
                 
-                {chat.searchResults.length > 0 && (
-                  <SearchResults
-                    results={chat.searchResults}
-                    onSelectDataset={handleSelectDataset}
-                    onViewDataset={handleViewDataset}
-                    selectedDataset={selectedDataset}
-                  />
-                )}
+                {/* Keep original grid view for mobile/tablet */}
+                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                  {chat.searchResults.length > 0 && (
+                    <SearchResults
+                      results={chat.searchResults}
+                      onSelectDataset={handleSelectDataset}
+                      onViewDataset={handleViewDataset}
+                      selectedDataset={selectedDataset}
+                    />
+                  )}
+                </Box>
               </Paper>
             </Box>
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            {/* Dataset Suggestions Sidebar - Desktop only */}
+            <Box sx={{ 
+              flex: 1,
+              minWidth: 280,
+              maxWidth: 400,
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <DatasetSidebar
+                results={chat.searchResults}
+                onSelectDataset={handleSelectDataset}
+                selectedDataset={selectedDataset}
+              />
+            </Box>
+
+            {/* Dataset Viewer */}
+            <Box sx={{ 
+              flex: { xs: 1, md: 2 }, 
+              minWidth: 0,
+              height: { xs: '50%', md: '100%' }
+            }}>
               <Paper 
                 elevation={2}
                 sx={{ 
