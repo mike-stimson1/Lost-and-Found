@@ -13,7 +13,7 @@ An AI-powered chat tool that helps users discover and explore relevant Australia
 ## Prerequisites
 
 1. **OpenAI Account**: You need access to OpenAI API
-2. **Assistant Setup**: Create an OpenAI Assistant with the `conceptscheme.json` uploaded as knowledge
+2. **Assistant Setup**: Create an OpenAI Assistant with the `selections.json` file uploaded as knowledge
 3. **API Configuration**: Get your OpenAI API key and Assistant ID from the OpenAI platform
 
 ## Installation
@@ -120,8 +120,9 @@ The built files will be in the `dist/` directory.
 
 ### OpenAI Issues
 - Verify your API key is correct and has proper permissions
-- Ensure your Assistant ID matches exactly
-- Make sure your Assistant has the conceptscheme.json uploaded as knowledge
+- Ensure your Assistant ID matches exactly  
+- Make sure your Assistant has the selections.json file uploaded as knowledge
+- Verify the selections.json file contains dataset entries with 'id' and 'description' fields
 
 ### Dataset API Issues
 - Some datasets may not be available or have restricted access

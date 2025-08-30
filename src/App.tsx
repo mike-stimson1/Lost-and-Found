@@ -21,14 +21,14 @@ import ChatInterface from './components/ChatInterface';
 import SearchResults from './components/SearchResults';
 import DatasetViewer from './components/DatasetViewer';
 import { useChat } from './hooks/useChat';
-import { useDatasetQuery } from './hooks/useDatasetQuery';
+import { useAbsData } from './hooks/useAbsData';
 
 function App() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   
   const chat = useChat();
-  const datasetQuery = useDatasetQuery();
+  const absData = useAbsData();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -36,18 +36,20 @@ function App() {
 
   const handleSelectDataset = (datasetId: string) => {
     setSelectedDataset(datasetId);
-    datasetQuery.clearData();
+    absData.clearData();
     
-    const dataset = chat.searchResults.find(r => r.datasetId === datasetId);
-    if (dataset?.metadata.dataflowIdentifier) {
-      datasetQuery.fetchDataset({
-        dataflowIdentifier: dataset.metadata.dataflowIdentifier,
-        dataKey: 'all',
-        detail: 'full'
-      }).catch(error => {
-        console.error('Failed to fetch dataset:', error);
-      });
-    }
+    // Try to fetch data directly using the dataset ID
+    absData.fetchAbsData(datasetId).catch(error => {
+      console.error('Failed to fetch dataset:', error);
+    });
+  };
+
+  const handleViewDataset = (datasetId: string) => {
+    // Directly fetch ABS data for this dataset
+    absData.fetchAbsData(datasetId).catch(error => {
+      console.error('Failed to fetch ABS data:', error);
+    });
+    setSelectedDataset(datasetId);
   };
 
   const selectedDatasetInfo = chat.searchResults.find(r => r.datasetId === selectedDataset);
@@ -147,6 +149,7 @@ function App() {
                   <SearchResults
                     results={chat.searchResults}
                     onSelectDataset={handleSelectDataset}
+                    onViewDataset={handleViewDataset}
                     selectedDataset={selectedDataset}
                   />
                 )}
@@ -164,9 +167,9 @@ function App() {
               >
                 {selectedDataset && selectedDatasetInfo ? (
                   <DatasetViewer
-                    data={datasetQuery.data}
-                    isLoading={datasetQuery.isLoading}
-                    error={datasetQuery.error}
+                    data={absData.data}
+                    isLoading={absData.isLoading}
+                    error={absData.error}
                     datasetTitle={selectedDatasetInfo.title}
                   />
                 ) : (

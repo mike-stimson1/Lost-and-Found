@@ -55,3 +55,27 @@ export interface ChatContextState {
   selectedDataset: string | null;
   conversationHistory: ChatMessage[];
 }
+
+export interface DatasetSuggestion {
+  id: string;
+  description: string;
+}
+
+export interface FunctionCall {
+  id: string;
+  type: string;
+  function: {
+    name: string;
+    arguments: QueryAbsDataArguments | SuggestDatasetsArguments;
+  };
+}
+
+export interface QueryAbsDataArguments {
+  dataflow_identifier: string;
+  data_key: string;
+  repeat_count: number;
+}
+
+export interface SuggestDatasetsArguments {
+  datasets: DatasetSuggestion[];
+}

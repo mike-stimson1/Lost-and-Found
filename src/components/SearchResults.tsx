@@ -11,12 +11,14 @@ import type { SearchResult } from '../types/chat';
 interface SearchResultsProps {
   results: SearchResult[];
   onSelectDataset: (datasetId: string) => void;
+  onViewDataset?: (datasetId: string) => void;
   selectedDataset: string | null;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   onSelectDataset,
+  onViewDataset,
   selectedDataset
 }) => {
   if (results.length === 0) {
@@ -45,6 +47,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               dataset={result}
               isSelected={selectedDataset === result.datasetId}
               onSelect={() => onSelectDataset(result.datasetId)}
+              onView={() => onViewDataset?.(result.datasetId)}
             />
           ))}
         </Box>

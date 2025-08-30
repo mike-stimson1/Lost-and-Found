@@ -127,16 +127,14 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
           {isSelected ? 'Selected' : 'Select'}
         </Button>
         
-        {dataset.metadata.dataflowIdentifier && (
-          <Button
-            size="small"
-            startIcon={<ViewIcon />}
-            onClick={onView}
-            disabled={!dataset.metadata.dataflowIdentifier}
-          >
-            View Data
-          </Button>
-        )}
+        <Button
+          size="small"
+          startIcon={<ViewIcon />}
+          onClick={onView}
+          disabled={!onView}
+        >
+          View Data
+        </Button>
       </CardActions>
     </Card>
   );
