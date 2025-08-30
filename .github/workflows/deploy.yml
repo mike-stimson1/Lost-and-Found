@@ -37,6 +37,11 @@ jobs:
         
       - name: Build
         run: npm run build
+        env:
+          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_OPENAI_ASSISTANT_ID: ${{ secrets.VITE_OPENAI_ASSISTANT_ID }}
+          VITE_ABS_API_TIMEOUT: ${{ secrets.VITE_ABS_API_TIMEOUT }}
+          VITE_MAX_SEARCH_RESULTS: ${{ secrets.VITE_MAX_SEARCH_RESULTS }}
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
