@@ -28,13 +28,15 @@ interface DatasetViewerProps {
   isLoading: boolean;
   error: string | null;
   datasetTitle?: string;
+  datasetId?: string;
 }
 
 const DatasetViewer: React.FC<DatasetViewerProps> = ({
   data,
   isLoading,
   error,
-  datasetTitle = 'Dataset'
+  datasetTitle = 'Dataset',
+  datasetId
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -78,6 +80,12 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       <Typography variant="h5" gutterBottom>
         {datasetTitle} - Data View
       </Typography>
+      
+      {datasetId && (
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Dataset ID: {datasetId} • {data?.observations.length || 0} observations
+        </Typography>
+      )}
 
       {/* Dataset Structure Information */}
       <Accordion sx={{ mb: 2 }}>
@@ -138,9 +146,13 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Key</TableCell>
+                {data.structure.dimensions.map((dim) => (
+                  <TableCell key={dim.id}>{dim.name}</TableCell>
+                ))}
                 <TableCell align="right">Value</TableCell>
-                <TableCell>Attributes</TableCell>
+                {data.structure.attributes.length > 0 && (
+                  <TableCell>Attributes</TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -150,9 +162,15 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                   hover
                   sx={{ '&:nth-of-type(odd)': { backgroundColor: 'action.hover' } }}
                 >
-                  <TableCell component="th" scope="row">
-                    {Array.isArray(obs.key) ? obs.key.join(' : ') : obs.key}
-                  </TableCell>
+                  {Array.isArray(obs.key) ? obs.key.map((keyValue, keyIndex) => (
+                    <TableCell key={keyIndex} component={keyIndex === 0 ? "th" : undefined} scope={keyIndex === 0 ? "row" : undefined}>
+                      {keyValue || '-'}
+                    </TableCell>
+                  )) : (
+                    <TableCell component="th" scope="row">
+                      {obs.key || '-'}
+                    </TableCell>
+                  )}
                   <TableCell align="right">
                     <Typography 
                       variant="body2" 
@@ -160,29 +178,31 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                       fontWeight={typeof obs.value === 'number' ? 'medium' : 'normal'}
                     >
                       {obs.value !== null && obs.value !== undefined 
-                        ? obs.value.toString() 
+                        ? (typeof obs.value === 'number' ? obs.value.toLocaleString() : obs.value.toString())
                         : '-'
                       }
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    {obs.attributes && Object.keys(obs.attributes).length > 0 ? (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Object.entries(obs.attributes).map(([key, value]) => (
-                          <Chip
-                            key={key}
-                            label={`${key}: ${value}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
+                  {data.structure.attributes.length > 0 && (
+                    <TableCell>
+                      {obs.attributes && Object.keys(obs.attributes).length > 0 ? (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {Object.entries(obs.attributes).map(([key, value]) => (
+                            <Chip
+                              key={key}
+                              label={`${key}: ${value}`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          -
+                        </Typography>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

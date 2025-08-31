@@ -204,6 +204,7 @@ function App() {
                     isLoading={absData.isLoading}
                     error={absData.error}
                     datasetTitle={selectedDatasetInfo.title}
+                    datasetId={selectedDataset}
                   />
                 ) : (
                   <Box 
