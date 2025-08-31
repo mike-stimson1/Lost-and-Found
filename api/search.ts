@@ -34,6 +34,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  console.log('Debug env vars:', { 
+    hasApiKey: !!OPENAI_API_KEY, 
+    hasAssistantId: !!ASSISTANT_ID,
+    apiKeyLength: OPENAI_API_KEY?.length || 0,
+    assistantIdLength: ASSISTANT_ID?.length || 0,
+    allEnvKeys: Object.keys(process.env).sort()
+  });
+
   if (!OPENAI_API_KEY || !ASSISTANT_ID) {
     console.error('Environment variables missing:', { 
       hasApiKey: !!OPENAI_API_KEY, 
