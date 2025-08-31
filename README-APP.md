@@ -19,34 +19,47 @@ An AI-powered chat tool that helps users discover and explore relevant Australia
 ## Installation
 
 1. Clone the repository and navigate to the app directory:
+
 ```bash
 cd dataset-scanner-app
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
+3. Install Vercel CLI globally (required for local development):
+
+```bash
+npm install -g vercel
+```
+
+4. Set up environment variables:
+
 ```bash
 cp .env.example .env
 ```
 
-4. Edit `.env` file with your OpenAI credentials:
+5. Edit `.env` file with your OpenAI credentials:
+
 ```env
-VITE_OPENAI_API_KEY=your-api-key-here
-VITE_OPENAI_ASSISTANT_ID=your-assistant-id
+OPENAI_API_KEY=your-api-key-here
+OPENAI_ASSISTANT_ID=your-assistant-id
 ```
 
-## Usage
+## Local Development
 
-1. Start the development server:
+This application uses Vercel serverless functions for secure API handling. To run locally:
+
+1. Start the development server with Vercel CLI:
+
 ```bash
-npm run dev
+vercel dev
 ```
 
-2. Open your browser and navigate to `http://localhost:5173`
+2. Open your browser and navigate to the URL shown (typically `http://localhost:3000`)
 
 3. Start asking questions about Australian government datasets:
    - "Show me datasets about employment statistics"
@@ -64,6 +77,7 @@ npm run dev
 ## API Integration
 
 The app integrates with:
+
 - **OpenAI Assistants API**: For natural language processing and dataset recommendations
 - **Australian Bureau of Statistics API**: For fetching actual dataset data
   - Base URL: `https://data.api.abs.gov.au/rest/data/`
@@ -72,6 +86,9 @@ The app integrates with:
 ## Project Structure
 
 ```
+api/                    # Vercel serverless functions
+├── chat.ts                    # OpenAI chat API endpoint
+└── search.ts                  # Dataset search API endpoint
 src/
 ├── components/          # React components
 │   ├── ChatInterface.tsx       # Main chat UI
@@ -79,7 +96,7 @@ src/
 │   ├── DatasetViewer.tsx      # Data table viewer
 │   └── SearchResults.tsx      # Search results grid
 ├── services/           # API services
-│   ├── openaiAssistant.ts     # OpenAI Assistants API integration
+│   ├── openaiAssistant.ts     # Frontend API client (calls /api routes)
 │   └── australianGovApi.ts    # Australian Gov API client
 ├── types/              # TypeScript definitions
 │   ├── dataset.ts             # Dataset type definitions
@@ -101,14 +118,34 @@ src/
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VITE_OPENAI_API_KEY` | Your OpenAI API key | Yes |
-| `VITE_OPENAI_ASSISTANT_ID` | Your OpenAI Assistant ID | Yes |
-| `VITE_ABS_API_TIMEOUT` | API timeout in milliseconds | No (default: 30000) |
-| `VITE_MAX_SEARCH_RESULTS` | Maximum search results to return | No (default: 5) |
+| Variable                | Description                      | Required            |
+| ----------------------- | -------------------------------- | ------------------- |
+| `OPENAI_API_KEY`        | Your OpenAI API key              | Yes                 |
+| `OPENAI_ASSISTANT_ID`   | Your OpenAI Assistant ID         | Yes                 |
+| `ABS_API_TIMEOUT`       | API timeout in milliseconds      | No (default: 30000) |
+| `MAX_SEARCH_RESULTS`    | Maximum search results to return | No (default: 5)     |
 
-## Build for Production
+**Security Note**: Environment variables are now processed server-side via Vercel serverless functions, keeping your API keys secure and never exposed to the browser.
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Install Vercel CLI:
+```bash
+npm install -g vercel
+```
+
+2. Deploy to Vercel:
+```bash
+vercel
+```
+
+3. Set environment variables in Vercel dashboard:
+   - `OPENAI_API_KEY`
+   - `OPENAI_ASSISTANT_ID`
+
+### Manual Build
 
 ```bash
 npm run build
@@ -119,17 +156,20 @@ The built files will be in the `dist/` directory.
 ## Troubleshooting
 
 ### OpenAI Issues
+
 - Verify your API key is correct and has proper permissions
-- Ensure your Assistant ID matches exactly  
+- Ensure your Assistant ID matches exactly
 - Make sure your Assistant has the selections.json file uploaded as knowledge
 - Verify the selections.json file contains dataset entries with 'id' and 'description' fields
 
 ### Dataset API Issues
+
 - Some datasets may not be available or have restricted access
 - Check the Australian Bureau of Statistics API documentation for valid parameters
 - Network timeouts may occur with large datasets
 
 ### Development Issues
+
 - Clear browser cache if you encounter stale data
 - Check browser console for detailed error messages
 - Ensure all environment variables are properly set
