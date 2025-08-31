@@ -2,9 +2,6 @@ import axios from "axios";
 import type {
   DatasetSearchQuery,
   SearchResult,
-  FunctionCall,
-  SuggestDatasetsArguments,
-  QueryAbsDataArguments,
 } from "../types/chat";
 
 class OpenAIAssistantService {

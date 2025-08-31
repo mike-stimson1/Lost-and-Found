@@ -99,54 +99,48 @@ const DatasetSidebar: React.FC<DatasetSidebarProps> = ({
                   },
                 }}
               >
-                <ListItemText
-                  primary={
+                <Box>
+                  <Typography 
+                    variant="subtitle2" 
+                    sx={{ 
+                      fontWeight: selectedDataset === result.datasetId ? 600 : 400,
+                      mb: 0.5,
+                      lineHeight: 1.3
+                    }}
+                  >
+                    {result.title}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ 
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      mb: 1,
+                      lineHeight: 1.3
+                    }}
+                  >
+                    {result.description}
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Chip
+                      label={`${Math.round(result.relevanceScore * 100)}% match`}
+                      size="small"
+                      color={result.relevanceScore > 0.8 ? 'success' : 'default'}
+                      variant="outlined"
+                      sx={{ fontSize: '0.7rem', height: 20 }}
+                    />
                     <Typography 
-                      variant="subtitle2" 
-                      sx={{ 
-                        fontWeight: selectedDataset === result.datasetId ? 600 : 400,
-                        mb: 0.5,
-                        lineHeight: 1.3
-                      }}
+                      variant="caption" 
+                      color="text.disabled"
+                      sx={{ fontSize: '0.7rem' }}
                     >
-                      {result.title}
+                      {result.datasetId}
                     </Typography>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{ 
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          mb: 1,
-                          lineHeight: 1.3
-                        }}
-                      >
-                        {result.description}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip
-                          label={`${Math.round(result.relevanceScore * 100)}% match`}
-                          size="small"
-                          color={result.relevanceScore > 0.8 ? 'success' : 'default'}
-                          variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                        <Typography 
-                          variant="caption" 
-                          color="text.disabled"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          {result.datasetId}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  }
-                />
+                  </Box>
+                </Box>
               </ListItemButton>
             </ListItem>
           ))}

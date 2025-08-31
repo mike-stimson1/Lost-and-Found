@@ -35,13 +35,6 @@ function getAcceptHeader(format: string, isMetadata: boolean = false): string {
   }
 }
 
-function buildQueryString(options: ABSQueryOptions): string {
-  const params = new URLSearchParams();
-  if (options.startPeriod) params.append('startPeriod', options.startPeriod);
-  if (options.endPeriod) params.append('endPeriod', options.endPeriod);
-  if (options.detail) params.append('detail', options.detail);
-  return params.toString();
-}
 
 export async function queryABSData(queryDefinition: QueryDefinition, options: ABSQueryOptions = {}): Promise<string> {
   const mergedOptions = { ...queryDefinition.defaultOptions, ...options };
