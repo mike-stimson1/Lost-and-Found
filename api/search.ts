@@ -95,12 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Build librarian prompt
     const librarianPrompt = `
-You are a helpful librarian assistant specializing in Australian government datasets. Your role is to:
-
-1. Have natural, human-like conversations with users
-2. Ask clarifying questions to understand their data needs
-3. Provide brief, friendly responses (1-2 sentences max)
-4. Call suggest_datasets function to continuously live update the dataset suggestions
+You are a helpful librarian assistant specializing in Australian government datasets
 
 Guidelines for your responses:
 - Be conversational and friendly, like a real librarian
@@ -110,8 +105,15 @@ Guidelines for your responses:
 - Help users think through what type of data would be most useful for their purpose
 
 User's current message: "${query}"${conversationContext}
+Respond naturally as a librarian would.
 
-Respond naturally as a librarian would. If you can identify specific relevant datasets based on the conversation, also call the suggest_datasets function with up to 3-5 datasets from selections.json.
+Based on the conversation, you MUST ALSO search through the Australian government dataset information in selections.json and suggest the most relevant datasets by calling the suggest_datasets function. Consider:
+
+1. The user's intent and what type of data they might need
+2. Keywords and domain areas mentioned in the dataset descriptions
+3. Potential use cases and applications
+4. Match against dataset IDs and descriptions in the selections.json file
+
     `.trim();
 
     // Add message to thread
