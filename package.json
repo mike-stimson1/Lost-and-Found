@@ -2,7 +2,6 @@
   "name": "dataset-scanner-app",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "homepage": "https://spreadsheet-surgeons.github.io/Dataset-Scanner",
   "scripts": {
     "dev": "vite",
