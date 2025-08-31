@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/search.ts": {
+      "runtime": "@vercel/node"
+    },
+    "api/chat.ts": {
+      "runtime": "@vercel/node"
+    }
+  }
+}
