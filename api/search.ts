@@ -18,11 +18,6 @@ interface SearchResult {
   };
 }
 
-interface ChatResponse {
-  message: string;
-  suggestions: SearchResult[];
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -63,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { query, conversationHistory = [] } = req.body;
+    const { query } = req.body;
 
     if (!query || typeof query !== 'string') {
       return res.status(400).json({ error: 'Search query is required' });
@@ -86,34 +81,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const threadId = threadResponse.data.id;
 
-    // Build conversation context
-    let conversationContext = '';
-    if (conversationHistory.length > 0) {
-      conversationContext = '\n\nPrevious conversation:\n' + 
-        conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
-    }
+    // Build search prompt
+    const searchPrompt = `
+User query: "${query}"
 
-    // Build librarian prompt
-    const librarianPrompt = `
-You are a helpful librarian assistant specializing in Australian government datasets
-
-Guidelines for your responses:
-- Be conversational and friendly, like a real librarian
-- Ask follow-up questions to narrow down their needs
-- Keep responses short and engaging
-- Always suggest datasets, these suggestions will update in real time based on the conversation for the user.
-- Help users think through what type of data would be most useful for their purpose
-
-User's current message: "${query}"${conversationContext}
-Respond naturally as a librarian would.
-
-Based on the conversation, you MUST ALSO search through the Australian government dataset information in selections.json and suggest the most relevant datasets by calling the suggest_datasets function. Consider:
-
+Based on this query, search through the Australian government dataset information in selections.json and suggest the most relevant datasets by calling the suggest_datasets function. Consider:
 1. The user's intent and what type of data they might need
 2. Keywords and domain areas mentioned in the dataset descriptions
 3. Potential use cases and applications
 4. Match against dataset IDs and descriptions in the selections.json file
 
+Respond with human-like conversation (1-2 sentences). The suggest_datasets function will display the relevant datasets and must be called
+
+Call the suggest_datasets function with up to 5 most relevant datasets from selections.json, providing their exact IDs and descriptions as they appear in the file.
     `.trim();
 
     // Add message to thread
@@ -121,7 +101,7 @@ Based on the conversation, you MUST ALSO search through the Australian governmen
       `${baseURL}/threads/${threadId}/messages`,
       {
         role: "user",
-        content: librarianPrompt,
+        content: searchPrompt,
       },
       {
         headers: {
@@ -132,13 +112,13 @@ Based on the conversation, you MUST ALSO search through the Australian governmen
       }
     );
 
-    // Run the assistant with optional tool calls
+    // Run the assistant with required tool call
     const runResponse = await axios.post(
       `${baseURL}/threads/${threadId}/runs`,
       {
         assistant_id: ASSISTANT_ID,
         max_completion_tokens: 1000,
-        temperature: 0.7,
+        temperature: 0.3,
         tool_choice: "required"
       },
       {
@@ -152,19 +132,15 @@ Based on the conversation, you MUST ALSO search through the Australian governmen
 
     const runId = runResponse.data.id;
 
-    // Poll for completion and get both message and function calls
-    const { message, functionCalls } = await pollRunCompletionForBoth(threadId, runId, baseURL, OPENAI_API_KEY);
+    // Poll for completion and handle function calls
+    const functionCalls = await pollRunCompletionForFunctionCalls(threadId, runId, baseURL, OPENAI_API_KEY);
 
-    const suggestions = functionCalls && functionCalls.length > 0 
-      ? convertFunctionCallsToSearchResults(functionCalls) 
-      : [];
+    if (!functionCalls || functionCalls.length === 0) {
+      return res.status(200).json({ results: [] });
+    }
 
-    const response: ChatResponse = {
-      message: message || "I'm here to help you find the data you need. What are you looking for?",
-      suggestions
-    };
-
-    return res.status(200).json(response);
+    const results = convertFunctionCallsToSearchResults(functionCalls);
+    return res.status(200).json({ results });
 
   } catch (error) {
     console.error('Error in search API:', error);
@@ -172,7 +148,7 @@ Based on the conversation, you MUST ALSO search through the Australian governmen
   }
 }
 
-async function pollRunCompletionForBoth(
+async function pollRunCompletionForFunctionCalls(
   threadId: string,
   runId: string,
   baseURL: string,
@@ -196,84 +172,13 @@ async function pollRunCompletionForBoth(
     const runData = runStatusResponse.data;
 
     if (status === "completed") {
-      // Get the assistant's message from the thread
-      const messagesResponse = await axios.get(
-        `${baseURL}/threads/${threadId}/messages`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-        }
-      );
-
-      const messages = messagesResponse.data.data;
-      const lastAssistantMessage = messages.find((msg: any) => msg.role === 'assistant');
-      const messageContent = lastAssistantMessage?.content?.[0]?.text?.value || '';
-
-      return {
-        message: messageContent,
-        functionCalls: []
-      };
+      if (runData.required_action?.type === "submit_tool_outputs") {
+        return runData.required_action.submit_tool_outputs.tool_calls || [];
+      }
+      return [];
     } else if (status === "requires_action") {
       if (runData.required_action?.type === "submit_tool_outputs") {
-        const toolCalls = runData.required_action.submit_tool_outputs.tool_calls;
-        
-        // Submit dummy outputs to complete the run and get the message
-        const toolOutputs = toolCalls.map((call: any) => ({
-          tool_call_id: call.id,
-          output: "Dataset suggestions processed"
-        }));
-
-        await axios.post(
-          `${baseURL}/threads/${threadId}/runs/${runId}/submit_tool_outputs`,
-          {
-            tool_outputs: toolOutputs
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-              "OpenAI-Beta": "assistants=v2",
-            },
-          }
-        );
-
-        // Wait for completion and then get the message
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        
-        // Get final run status
-        const finalRunResponse = await axios.get(
-          `${baseURL}/threads/${threadId}/runs/${runId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "OpenAI-Beta": "assistants=v2",
-            },
-          }
-        );
-
-        if (finalRunResponse.data.status === "completed") {
-          // Get the assistant's message
-          const messagesResponse = await axios.get(
-            `${baseURL}/threads/${threadId}/messages`,
-            {
-              headers: {
-                Authorization: `Bearer ${apiKey}`,
-                "OpenAI-Beta": "assistants=v2",
-              },
-            }
-          );
-
-          const messages = messagesResponse.data.data;
-          const lastAssistantMessage = messages.find((msg: any) => msg.role === 'assistant');
-          const messageContent = lastAssistantMessage?.content?.[0]?.text?.value || '';
-
-          return {
-            message: messageContent,
-            functionCalls: toolCalls
-          };
-        }
+        return runData.required_action.submit_tool_outputs.tool_calls || [];
       }
     } else if (
       status === "failed" ||
@@ -287,7 +192,7 @@ async function pollRunCompletionForBoth(
     attempts++;
   }
 
-  throw new Error("Polling timed out");
+  throw new Error("Function call polling timed out");
 }
 
 function convertFunctionCallsToSearchResults(functionCalls: any[]): SearchResult[] {
