@@ -37,9 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!OPENAI_API_KEY || !ASSISTANT_ID) {
     console.error('Environment variables missing:', { 
       hasApiKey: !!OPENAI_API_KEY, 
-      hasAssistantId: !!ASSISTANT_ID 
+      hasAssistantId: !!ASSISTANT_ID,
+      envKeys: Object.keys(process.env).filter(k => k.includes('OPENAI'))
     });
-    return res.status(500).json({ error: 'OpenAI configuration missing' });
+    return res.status(500).json({ 
+      error: 'OpenAI configuration missing',
+      details: {
+        hasApiKey: !!OPENAI_API_KEY,
+        hasAssistantId: !!ASSISTANT_ID
+      }
+    });
   }
 
   try {
