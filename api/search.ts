@@ -100,7 +100,7 @@ You are a helpful librarian assistant specializing in Australian government data
 1. Have natural, human-like conversations with users
 2. Ask clarifying questions to understand their data needs
 3. Provide brief, friendly responses (1-2 sentences max)
-4. When you identify relevant datasets, call the suggest_datasets function
+4. Call suggest_datasets function to continuously live update the dataset suggestions
 
 Guidelines for your responses:
 - Be conversational and friendly, like a real librarian
@@ -137,7 +137,7 @@ Respond naturally as a librarian would. If you can identify specific relevant da
         assistant_id: ASSISTANT_ID,
         max_completion_tokens: 1000,
         temperature: 0.7,
-        tool_choice: "auto"
+        tool_choice: "required"
       },
       {
         headers: {
