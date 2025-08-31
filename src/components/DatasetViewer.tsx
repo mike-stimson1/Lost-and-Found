@@ -16,10 +16,12 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Button,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Download as DownloadIcon
 } from '@mui/icons-material';
 import type { DatasetData } from '../types/dataset';
 
@@ -50,6 +52,46 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setPage(0);
   };
 
+  const downloadCSV = () => {
+    if (!data) return;
+
+    const headers = [
+      ...data.structure.dimensions.map(dim => dim.name),
+      'Value',
+      ...(data.structure.attributes.length > 0 ? data.structure.attributes.map(attr => attr.name) : [])
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...data.observations.map(obs => {
+        const dimensionValues = Array.isArray(obs.key) ? obs.key : [obs.key];
+        const value = obs.value !== null && obs.value !== undefined ? obs.value.toString() : '';
+        const attributeValues = data.structure.attributes.map(attr => 
+          obs.attributes && obs.attributes[attr.id] ? obs.attributes[attr.id] : ''
+        );
+        
+        return [...dimensionValues, value, ...attributeValues]
+          .map(cell => {
+            const cellStr = cell?.toString() || '';
+            return cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n') 
+              ? `"${cellStr.replace(/"/g, '""')}"` 
+              : cellStr;
+          })
+          .join(',');
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${datasetTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_data.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (error) {
     return (
       <Alert severity="error" sx={{ mt: 2 }}>
@@ -77,9 +119,19 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 
   return (
     <Box sx={{ mt: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        {datasetTitle} - Data View
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5">
+          {datasetTitle} - Data View
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<DownloadIcon />}
+          onClick={downloadCSV}
+          disabled={!data || data.observations.length === 0}
+        >
+          Download CSV
+        </Button>
+      </Box>
       
       {datasetId && (
         <Typography variant="body2" color="text.secondary" gutterBottom>
