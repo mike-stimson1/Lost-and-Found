@@ -113,8 +113,9 @@ const DatasetSidebar: React.FC<DatasetSidebarProps> = ({
                     </Typography>
                   }
                   secondary={
-                    <Box>
+                    <Box component="span">
                       <Typography 
+                        component="span"
                         variant="body2" 
                         color="text.secondary"
                         sx={{ 
@@ -128,7 +129,7 @@ const DatasetSidebar: React.FC<DatasetSidebarProps> = ({
                       >
                         {result.description}
                       </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Chip
                           label={`${Math.round(result.relevanceScore * 100)}% match`}
                           size="small"
@@ -137,6 +138,7 @@ const DatasetSidebar: React.FC<DatasetSidebarProps> = ({
                           sx={{ fontSize: '0.7rem', height: 20 }}
                         />
                         <Typography 
+                          component="span"
                           variant="caption" 
                           color="text.disabled"
                           sx={{ fontSize: '0.7rem' }}

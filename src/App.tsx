@@ -19,10 +19,11 @@ import {
 import theme from './theme';
 import ChatInterface from './components/ChatInterface';
 import SearchResults from './components/SearchResults';
-import DatasetViewer from './components/DatasetViewer';
 import DatasetSidebar from './components/DatasetSidebar';
+import DatasetViewer from './components/DatasetViewer';
 import { useChat } from './hooks/useChat';
 import { useAbsData } from './hooks/useAbsData';
+import { loadQuery } from './services/dataflowQueries/dataflowParser';
 
 function App() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
@@ -35,22 +36,64 @@ function App() {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleSelectDataset = (datasetId: string) => {
+  const handleSelectDataset = async (datasetId: string) => {
     setSelectedDataset(datasetId);
     absData.clearData();
     
-    // Try to fetch data directly using the dataset ID
-    absData.fetchAbsData(datasetId).catch(error => {
-      console.error('Failed to fetch dataset:', error);
-    });
+    const selectedDatasetInfo = chat.searchResults.find(r => r.datasetId === datasetId);
+    if (selectedDatasetInfo?.metadata?.dataflowIdentifier) {
+      try {
+        let queryDefinition = await loadQuery(selectedDatasetInfo.metadata.dataflowIdentifier);
+        
+        // If no query found, create a basic one using the available metadata
+        if (!queryDefinition) {
+          queryDefinition = {
+            id: selectedDatasetInfo.metadata.dataflowIdentifier,
+            name: selectedDatasetInfo.title,
+            description: selectedDatasetInfo.description,
+            endpoint: `/data/ABS,${selectedDatasetInfo.metadata.dataflowIdentifier},1.0.0/${selectedDatasetInfo.metadata.dataKey || 'all'}`,
+            defaultOptions: {
+              detail: 'dataonly' as const,
+              format: 'csv-labels' as const
+            }
+          };
+        }
+        
+        await absData.fetchData(queryDefinition);
+      } catch (error) {
+        console.error('Failed to load and fetch data:', error);
+      }
+    }
   };
 
-  const handleViewDataset = (datasetId: string) => {
-    // Directly fetch ABS data for this dataset
-    absData.fetchAbsData(datasetId).catch(error => {
-      console.error('Failed to fetch ABS data:', error);
-    });
+  const handleViewDataset = async (datasetId: string) => {
     setSelectedDataset(datasetId);
+    absData.clearData();
+    
+    const selectedDatasetInfo = chat.searchResults.find(r => r.datasetId === datasetId);
+    if (selectedDatasetInfo?.metadata?.dataflowIdentifier) {
+      try {
+        let queryDefinition = await loadQuery(selectedDatasetInfo.metadata.dataflowIdentifier);
+        
+        // If no query found, create a basic one using the available metadata
+        if (!queryDefinition) {
+          queryDefinition = {
+            id: selectedDatasetInfo.metadata.dataflowIdentifier,
+            name: selectedDatasetInfo.title,
+            description: selectedDatasetInfo.description,
+            endpoint: `/data/ABS,${selectedDatasetInfo.metadata.dataflowIdentifier},1.0.0/${selectedDatasetInfo.metadata.dataKey || 'all'}`,
+            defaultOptions: {
+              detail: 'dataonly' as const,
+              format: 'csv-labels' as const
+            }
+          };
+        }
+        
+        await absData.fetchData(queryDefinition);
+      } catch (error) {
+        console.error('Failed to load and fetch data:', error);
+      }
+    }
   };
 
   const selectedDatasetInfo = chat.searchResults.find(r => r.datasetId === selectedDataset);

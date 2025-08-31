@@ -1,3 +1,6 @@
+import type { QueryDefinition } from "./absClient";
+
+// File format of the "all endpoints" query
 export interface ABSDataflowAnnotation {
   id?: string;
   title?: string;
@@ -30,6 +33,7 @@ export interface ABSDataflowsResponse {
     dataflows: ABSDataflowData[];
   };
 }
+//////
 
 export interface ABSQueryOptions {
   startPeriod?: string;
@@ -38,12 +42,26 @@ export interface ABSQueryOptions {
   format?: 'json' | 'csv' | 'csv-labels' | 'csv-file' | 'xml';
 }
 
-export interface QueryDefinition {
-  id: string;
-  name: string;
-  description: string;
-  endpoint: string;
-  defaultOptions?: ABSQueryOptions;
+export async function loadQuery(queryId: string): Promise<QueryDefinition | null> {
+  try {
+    const queries = await loadAvailableQueries();
+    return queries.find(query => query.id === queryId) || null;
+  } catch (error) {
+    console.error(`Failed to load query ${queryId}:`, error);
+    return null;
+  }
+}
+
+
+export async function loadAvailableQueries(): Promise<QueryDefinition[]> {
+  try {
+    const dataflows = await loadDataflows();
+    return parseDataflowsToQueries(dataflows);
+  } catch (error) {
+    console.error('Failed to load dataflows, falling back to hardcoded queries:', error);
+    // Fallback to a few essential queries if loading fails
+    return [];
+  }
 }
 
 
@@ -56,7 +74,9 @@ export async function loadDataflows(): Promise<ABSDataflowsResponse> {
 }
 
 
-function generateDefaultOptions(dataflow: ABSDataflowData): ABSQueryOptions {
+
+
+function generateDefaultOptions(_dataflow: ABSDataflowData): ABSQueryOptions {
   const options: ABSQueryOptions = {
     detail: 'dataonly',
     format: 'csv-labels'
@@ -128,34 +148,4 @@ function calculateRelevanceScore(dataflow: ABSDataflowData): number {
   return score;
 }
 
-export async function loadAvailableQueries(): Promise<QueryDefinition[]> {
-  try {
-    const dataflows = await loadDataflows();
-    return parseDataflowsToQueries(dataflows);
-  } catch (error) {
-    console.error('Failed to load dataflows, falling back to hardcoded queries:', error);
-    // Fallback to a few essential queries if loading fails
-    return [
-      {
-        id: 'cpi',
-        name: 'Consumer Price Index (CPI)',
-        description: 'Latest CPI data for Australia',
-        endpoint: '/data/ABS,CPI,1.0.0/1.50.10001.10.Q',
-        defaultOptions: {
-          endPeriod: '2024-Q4',
-          detail: 'dataonly',
-          format: 'json'
-        }
-      },
-      {
-        id: 'dataflows',
-        name: 'Available Dataflows',
-        description: 'List all available ABS dataflows',
-        endpoint: '/dataflow/ABS',
-        defaultOptions: {
-          format: 'json'
-        }
-      }
-    ];
-  }
-}
+

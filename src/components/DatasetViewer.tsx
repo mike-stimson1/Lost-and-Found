@@ -1,212 +1,126 @@
-import React, { useState } from 'react';
+import { useMemo } from 'react';
 import {
-  Box,
-  Paper,
   Typography,
+  Box,
+  CircularProgress,
+  Alert,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
-  Chip,
-  Alert,
-  CircularProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Paper
 } from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
-import type { DatasetData } from '../types/dataset';
 
 interface DatasetViewerProps {
-  data: DatasetData | null;
+  data: string | null;
   isLoading: boolean;
   error: string | null;
   datasetTitle?: string;
 }
 
-const DatasetViewer: React.FC<DatasetViewerProps> = ({
-  data,
-  isLoading,
-  error,
-  datasetTitle = 'Dataset'
-}) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+function parseCSV(csvText: string): string[][] {
+  const lines = csvText.trim().split('\n');
+  return lines.map(line => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result.map(cell => cell.replace(/^"|"$/g, ''));
+  });
+}
 
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
+export default function DatasetViewer({ data, isLoading, error, datasetTitle }: DatasetViewerProps) {
+  const parsedData = useMemo(() => {
+    if (!data) return null;
+    try {
+      return parseCSV(data);
+    } catch (err) {
+      console.error('Failed to parse CSV:', err);
+      return null;
+    }
+  }, [data]);
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
         <CircularProgress />
       </Box>
     );
   }
 
-  if (!data) {
-    return null;
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
   }
 
-  const paginatedObservations = data.observations.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  if (!data) {
+    return (
+      <Typography variant="body2" color="text.secondary" textAlign="center">
+        No data available
+      </Typography>
+    );
+  }
+
+  if (!parsedData || parsedData.length === 0) {
+    return (
+      <Alert severity="warning">Failed to parse CSV data</Alert>
+    );
+  }
+
+  const headers = parsedData[0];
+  const rows = parsedData.slice(1);
 
   return (
-    <Box sx={{ mt: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        {datasetTitle} - Data View
-      </Typography>
-
-      {/* Dataset Structure Information */}
-      <Accordion sx={{ mb: 2 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <InfoIcon sx={{ mr: 1 }} />
-          <Typography variant="h6">Dataset Structure</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Dimensions ({data.structure.dimensions.length})
-              </Typography>
-              {data.structure.dimensions.map((dim) => (
-                <Chip 
-                  key={dim.id}
-                  label={`${dim.name} (${dim.id})`}
-                  size="small"
-                  sx={{ mb: 0.5, mr: 0.5 }}
-                />
+    <Box>
+      {datasetTitle && (
+        <Typography variant="h6" gutterBottom>
+          {datasetTitle}
+        </Typography>
+      )}
+      
+      <TableContainer component={Paper} sx={{ maxHeight: '100%' }}>
+        <Table stickyHeader size="small">
+          <TableHead>
+            <TableRow>
+              {headers.map((header, index) => (
+                <TableCell key={index} sx={{ fontWeight: 'bold' }}>
+                  {header}
+                </TableCell>
               ))}
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Measures ({data.structure.measures.length})
-              </Typography>
-              {data.structure.measures.map((measure) => (
-                <Chip 
-                  key={measure.id}
-                  label={`${measure.name} (${measure.id})`}
-                  size="small"
-                  color="primary"
-                  sx={{ mb: 0.5, mr: 0.5 }}
-                />
-              ))}
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Attributes ({data.structure.attributes.length})
-              </Typography>
-              {data.structure.attributes.map((attr) => (
-                <Chip 
-                  key={attr.id}
-                  label={`${attr.name} (${attr.id})`}
-                  size="small"
-                  color="secondary"
-                  sx={{ mb: 0.5, mr: 0.5 }}
-                />
-              ))}
-            </Box>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* Data Table */}
-      <Paper>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Key</TableCell>
-                <TableCell align="right">Value</TableCell>
-                <TableCell>Attributes</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.slice(0, 100).map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <TableCell key={cellIndex}>
+                    {cell}
+                  </TableCell>
+                ))}
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedObservations.map((obs, index) => (
-                <TableRow 
-                  key={index}
-                  hover
-                  sx={{ '&:nth-of-type(odd)': { backgroundColor: 'action.hover' } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {Array.isArray(obs.key) ? obs.key.join(' : ') : obs.key}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography 
-                      variant="body2" 
-                      fontFamily="monospace"
-                      fontWeight={typeof obs.value === 'number' ? 'medium' : 'normal'}
-                    >
-                      {obs.value !== null && obs.value !== undefined 
-                        ? obs.value.toString() 
-                        : '-'
-                      }
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {obs.attributes && Object.keys(obs.attributes).length > 0 ? (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Object.entries(obs.attributes).map(([key, value]) => (
-                          <Chip
-                            key={key}
-                            label={`${key}: ${value}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
-        <TablePagination
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          component="div"
-          count={data.observations.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Paper>
-
-      {data.observations.length === 0 && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No observations found in this dataset.
-        </Alert>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {rows.length > 100 && (
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          Showing first 100 rows of {rows.length} total rows
+        </Typography>
       )}
     </Box>
   );
-};
-
-export default DatasetViewer;
+}

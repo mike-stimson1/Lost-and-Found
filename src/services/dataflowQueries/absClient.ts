@@ -1,4 +1,13 @@
-import type { ABSQueryOptions, QueryDefinition } from "./dataflowParser";
+import type { ABSQueryOptions } from "./dataflowParser";
+
+// endpoint query
+export interface QueryDefinition {
+  id: string;
+  name: string;
+  description: string;
+  endpoint: string;
+  defaultOptions?: ABSQueryOptions;
+}
 
 const BASE_URL = '/api';
 
@@ -34,7 +43,7 @@ function buildQueryString(options: ABSQueryOptions): string {
   return params.toString();
 }
 
-export async function queryABSData(queryDefinition: QueryDefinition, options: ABSQueryOptions = {}): Promise<any> {
+export async function queryABSData(queryDefinition: QueryDefinition, options: ABSQueryOptions = {}): Promise<string> {
   const mergedOptions = { ...queryDefinition.defaultOptions, ...options };
   const queryString = buildQueryString(mergedOptions);
   const url = `${BASE_URL}${queryDefinition.endpoint}${queryString ? '?' + queryString : ''}`;
@@ -51,18 +60,19 @@ export async function queryABSData(queryDefinition: QueryDefinition, options: AB
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return await response.text();
 
-    if (format === 'json') {
-      try {
-        return await response.json();
-      } catch (jsonError) {
-        console.warn(`JSON parsing failed, falling back to text: ${jsonError}`);
-        const text = await response.text();
-        return text;
-      }
-    } else {
-      return await response.text();
-    }
+    // if (format === 'json') {
+    //   try {
+    //     return await response.json();
+    //   } catch (jsonError) {
+    //     console.warn(`JSON parsing failed, falling back to text: ${jsonError}`);
+    //     const text = await response.text();
+    //     return text;
+    //   }
+    // } else {
+    //   return await response.text();
+    // }
   } catch (error) {
     console.error(`Error querying ${url}:`, error);
     throw error;
