@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { queryABSData } from '../services/dataflowQueries/absClient';
-import type { QueryDefinition, ABSQueryOptions } from '../services/dataflowQueries/dataflowParser';
+import { queryABSData, type QueryDefinition } from '../services/dataflowQueries/absClient';
+import type { ABSQueryOptions } from '../services/dataflowQueries/dataflowParser';
 
 interface AbsDataState {
   data: string | null;
